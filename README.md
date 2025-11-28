@@ -177,6 +177,13 @@ python3 download_dict.py https://raw.githubusercontent.com/first20hours/google-1
 ### 可选依赖
 
 - **pypinyin** - 用于导入词库到 Rime（生成拼音）
+  
+  使用 requirements.txt 安装（推荐）：
+  ```bash
+  pip3 install -r requirements.txt
+  ```
+  
+  或单独安装：
   ```bash
   pip3 install pypinyin
   ```

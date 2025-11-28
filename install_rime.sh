@@ -231,6 +231,79 @@ EOF
     print_success "rime-emoji 安装完成"
 }
 
+# 步骤7: 导入词库到 Rime
+import_dict_to_rime() {
+    print_section "步骤 7/7: 导入词库到 Rime"
+    
+    # 获取脚本所在目录
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    DATA_DIR="$SCRIPT_DIR/data"
+    
+    # 查找最新的 final.txt 文件
+    if [ ! -d "$DATA_DIR" ]; then
+        print_warning "data 目录不存在，跳过词库导入"
+        return 0
+    fi
+    
+    # 查找所有 *_final.txt 文件（不包括 *_final_带词频.txt）
+    DICT_FILE=$(find "$DATA_DIR" -maxdepth 1 -name "*_final.txt" -type f ! -name "*_final_带词频.txt" | sort -r | head -1)
+    
+    if [ -z "$DICT_FILE" ]; then
+        print_warning "未找到词库文件（*_final.txt），跳过导入"
+        print_info "提示: 运行 python3 convert.py 生成词库文件"
+        return 0
+    fi
+    
+    print_info "找到词库文件: $(basename "$DICT_FILE")"
+    
+    # 检查 pypinyin 是否安装
+    if ! python3 -c "import pypinyin" 2>/dev/null; then
+        print_warning "pypinyin 未安装，正在安装..."
+        # 优先使用 requirements.txt
+        if [ -f "$SCRIPT_DIR/requirements.txt" ]; then
+            if pip3 install -r "$SCRIPT_DIR/requirements.txt"; then
+                print_success "依赖安装完成（从 requirements.txt）"
+            else
+                print_warning "从 requirements.txt 安装失败，尝试单独安装 pypinyin..."
+                if pip3 install pypinyin; then
+                    print_success "pypinyin 安装完成"
+                else
+                    print_error "pypinyin 安装失败，跳过词库导入"
+                    print_info "手动安装: pip3 install -r requirements.txt"
+                    print_info "或单独安装: pip3 install pypinyin"
+                    print_info "手动导入: python3 import_to_rime.py \"$DICT_FILE\""
+                    return 0
+                fi
+            fi
+        else
+            if pip3 install pypinyin; then
+                print_success "pypinyin 安装完成"
+            else
+                print_error "pypinyin 安装失败，跳过词库导入"
+                print_info "手动安装: pip3 install pypinyin"
+                print_info "手动导入: python3 import_to_rime.py \"$DICT_FILE\""
+                return 0
+            fi
+        fi
+    fi
+    
+    # 导入词库
+    print_info "正在导入词库到 Rime..."
+    if python3 "$SCRIPT_DIR/import_to_rime.py" "$DICT_FILE"; then
+        print_success "词库导入完成"
+        
+        # 重新部署 Rime 配置
+        if [ -f "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel" ]; then
+            print_info "正在重新部署 Rime 配置..."
+            /Library/Input\ Methods/Squirrel.app/Contents/MacOS/Squirrel --reload
+            print_success "Rime 配置已更新"
+        fi
+    else
+        print_warning "词库导入失败，你可以稍后手动运行:"
+        print_info "  python3 import_to_rime.py \"$DICT_FILE\""
+    fi
+}
+
 # 部署 Rime 配置
 deploy_rime() {
     print_section "部署 Rime 配置"
@@ -270,6 +343,7 @@ main() {
     configure_icloud_backup
     install_rime_emoji
     deploy_rime
+    import_dict_to_rime
     
     # 完成提示
     print_section "安装完成"
@@ -288,6 +362,7 @@ main() {
     echo "  - Emoji 支持：输入中文词汇时自动显示相关 emoji"
     echo "  - iCloud 备份：用户数据自动备份到 iCloud"
     echo "  - 微信键盘主题：浅色/深色主题自动切换"
+    echo "  - 词库导入：自动导入搜狗词库（如果存在）"
     echo ""
 }
 

@@ -16,6 +16,13 @@ from datetime import datetime
 from sogou_export_with_freq import parse_sogou_bin_with_freq, export_with_freq
 from filter_dict import filter_dict_with_freq, load_common_words_from_file
 
+# 尝试导入 Rime 导入功能（可选）
+try:
+    from import_to_rime import convert_to_rime_format
+    RIME_AVAILABLE = True
+except (ImportError, AttributeError):
+    RIME_AVAILABLE = False
+
 
 def find_latest_bin_file(data_dir):
     """查找data目录下最新的bin文件"""
@@ -237,6 +244,30 @@ def main():
     print("使用建议:")
     print(f"  - 推荐使用: {final_with_freq.name if final_with_freq.exists() else 'N/A'}")
     print(f"  - 导入其他输入法: {final_file.name if final_file.exists() else 'N/A'}")
+    
+    # 步骤3: 自动导入到 Rime（如果可用）
+    if RIME_AVAILABLE and final_file.exists():
+        print(f"\n{'='*60}")
+        print("步骤3: 导入到 Rime 输入法")
+        print(f"{'='*60}")
+        
+        try:
+            convert_to_rime_format(str(final_file), output_file=None)
+            print("\n✅ Rime 词库导入成功!")
+            print("\n下一步:")
+            print("  1. 部署 Rime 配置（运行以下命令）:")
+            print("     /Library/Input\\ Methods/Squirrel.app/Contents/MacOS/Squirrel --reload")
+            print("  2. 或者重启输入法")
+        except ImportError as e:
+            print(f"\n⚠️  导入到 Rime 失败: {e}")
+            print("   请先安装 pypinyin: pip3 install pypinyin")
+        except Exception as e:
+            print(f"\n⚠️  导入到 Rime 时出错: {e}")
+            print("   你可以稍后手动运行:")
+            print(f"   python3 import_to_rime.py {final_file}")
+    elif not RIME_AVAILABLE:
+        print(f"\n💡 提示: 要自动导入到 Rime，请安装 pypinyin:")
+        print("   pip3 install pypinyin")
 
 
 if __name__ == '__main__':

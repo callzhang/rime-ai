@@ -10,10 +10,9 @@ from pathlib import Path
 
 try:
     from pypinyin import lazy_pinyin, Style
+    PYPINYIN_AVAILABLE = True
 except ImportError:
-    print("错误: 需要安装 pypinyin 库")
-    print("安装命令: pip3 install pypinyin")
-    sys.exit(1)
+    PYPINYIN_AVAILABLE = False
 
 
 def word_to_pinyin(word):
@@ -31,11 +30,17 @@ def convert_to_rime_format(input_file, output_file=None, min_freq=1):
         input_file: 输入文件（词条列表，每行一个词）
         output_file: 输出文件（默认为 ~/Library/Rime/custom_phrase.txt）
         min_freq: 最小词频（默认1）
+    
+    Raises:
+        ImportError: 如果 pypinyin 未安装
+        FileNotFoundError: 如果输入文件不存在
     """
+    if not PYPINYIN_AVAILABLE:
+        raise ImportError("需要安装 pypinyin 库。安装命令: pip3 install pypinyin")
+    
     input_path = Path(input_file)
     if not input_path.exists():
-        print(f"错误: 文件不存在: {input_file}")
-        sys.exit(1)
+        raise FileNotFoundError(f"文件不存在: {input_file}")
     
     # 默认输出到Rime目录
     if output_file is None:
@@ -92,6 +97,11 @@ def convert_to_rime_format(input_file, output_file=None, min_freq=1):
 
 
 def main():
+    if not PYPINYIN_AVAILABLE:
+        print("错误: 需要安装 pypinyin 库")
+        print("安装命令: pip3 install pypinyin")
+        sys.exit(1)
+    
     if len(sys.argv) < 2:
         print("搜狗词库导入Rime工具")
         print("=" * 60)
