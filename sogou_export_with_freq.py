@@ -108,7 +108,19 @@ def parse_sogou_bin_with_freq(bin_file):
         py_len = py_len_bytes // 2
         entry_offset += 2
         
-        # 跳过拼音（我们不需要拼音，只需要词条和词频）
+        # 读取拼音（尝试读取，如果失败或为空则留空，后续用pypinyin生成）
+        pinyin = ""
+        if py_len > 0 and py_len < 100:  # 限制长度避免异常
+            py_offset = entry_offset
+            if py_offset + py_len * 2 <= len(data):
+                py_bytes = data[py_offset:py_offset + py_len * 2]
+                try:
+                    pinyin_raw = py_bytes.decode('utf-16le')
+                    # 检查是否是有效的拼音（不全是空字符或特殊字符）
+                    if pinyin_raw and not all(ord(c) < 32 or ord(c) > 126 for c in pinyin_raw if c):
+                        pinyin = pinyin_raw.strip('\x00').strip()
+                except (UnicodeDecodeError, UnicodeError):
+                    pinyin = ""
         entry_offset += py_len * 2
         
         # 读取词条大小
@@ -129,22 +141,42 @@ def parse_sogou_bin_with_freq(bin_file):
         word_bytes = data[entry_offset:entry_offset + word_size]
         try:
             word = word_bytes.decode('utf-16le')
-            words_with_freq.append((word, freq))
+            # 存储格式: (词条, 词频, 拼音)
+            # 只使用bin文件中的原始拼音，不自动生成
+            words_with_freq.append((word, freq, pinyin))
         except UnicodeDecodeError:
             continue
     
     return words_with_freq
 
 
-def export_with_freq(words_with_freq, output_file):
-    """导出带词频的词库"""
+def export_with_freq(words_with_freq, output_file, include_pinyin=False):
+    """
+    导出带词频的词库
+    
+    Args:
+        words_with_freq: 词条列表，格式为 (词条, 词频, 拼音) 或 (词条, 词频)
+        output_file: 输出文件路径
+        include_pinyin: 是否包含拼音（默认False，保持向后兼容）
+    """
     # 按词频降序排序
     words_with_freq.sort(key=lambda x: x[1], reverse=True)
     
     # 写入文件
     with open(output_file, 'w', encoding='utf-8') as f:
-        for word, freq in words_with_freq:
-            f.write(f"{word}\t{freq}\n")
+        for item in words_with_freq:
+            if len(item) == 3:
+                # 包含拼音: (词条, 词频, 拼音)
+                word, freq, pinyin = item
+                if include_pinyin:
+                    # 只输出bin文件中的原始拼音，如果没有就留空
+                    f.write(f"{word}\t{freq}\t{pinyin}\n")
+                else:
+                    f.write(f"{word}\t{freq}\n")
+            else:
+                # 不包含拼音: (词条, 词频)
+                word, freq = item
+                f.write(f"{word}\t{freq}\n")
     
     return len(words_with_freq)
 
@@ -185,20 +217,34 @@ def main():
     
     try:
         words_with_freq = parse_sogou_bin_with_freq(bin_file)
-        count = export_with_freq(words_with_freq, output_file)
+        # 默认包含拼音（如果bin文件中有）
+        count = export_with_freq(words_with_freq, output_file, include_pinyin=True)
         
         print(f"\n✅ 成功! 共导出 {count:,} 个词条（带词频）")
         print(f"文件已保存到: {output_file}")
         
         if words_with_freq:
             print(f"\n词频统计:")
-            print(f"  最高词频: {words_with_freq[0][1]:,}")
-            print(f"  最低词频: {words_with_freq[-1][1]:,}")
-            print(f"  平均词频: {sum(f for _, f in words_with_freq) // len(words_with_freq):,}")
-            
-            print(f"\n前10个高频词:")
-            for i, (word, freq) in enumerate(words_with_freq[:10], 1):
-                print(f"  {i}. {word}\t{freq:,}")
+            # 兼容新旧格式
+            if len(words_with_freq[0]) == 3:
+                print(f"  最高词频: {words_with_freq[0][1]:,}")
+                print(f"  最低词频: {words_with_freq[-1][1]:,}")
+                print(f"  平均词频: {sum(f for _, f, _ in words_with_freq) // len(words_with_freq):,}")
+                
+                print(f"\n前10个高频词:")
+                for i, (word, freq, pinyin) in enumerate(words_with_freq[:10], 1):
+                    if pinyin:
+                        print(f"  {i}. {word}\t{freq:,}\t{pinyin}")
+                    else:
+                        print(f"  {i}. {word}\t{freq:,}")
+            else:
+                print(f"  最高词频: {words_with_freq[0][1]:,}")
+                print(f"  最低词频: {words_with_freq[-1][1]:,}")
+                print(f"  平均词频: {sum(f for _, f in words_with_freq) // len(words_with_freq):,}")
+                
+                print(f"\n前10个高频词:")
+                for i, (word, freq) in enumerate(words_with_freq[:10], 1):
+                    print(f"  {i}. {word}\t{freq:,}")
     except Exception as e:
         print(f"\n❌ 错误: {e}")
         import traceback

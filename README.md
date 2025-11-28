@@ -88,6 +88,8 @@ sogou_export/
 ├── sogou_export_with_freq.py    # 导出带词频词库
 ├── filter_dict.py               # 词库过滤脚本
 ├── download_dict.py             # 词典下载辅助工具（可选）
+├── import_to_rime.py            # 导入词库到 Rime 输入法
+├── install_rime.sh              # Rime 输入法一键安装脚本
 ├── README.md                    # 本文件
 ├── .gitignore                   # Git忽略文件
 └── data/                        # 词库数据目录
@@ -168,8 +170,22 @@ python3 download_dict.py https://raw.githubusercontent.com/first20hours/google-1
 
 ## ⚙️ 依赖
 
-- Python 3.6+
-- 无需外部依赖（纯Python实现）
+### 核心依赖
+
+- **Python 3.6+** - 无需外部依赖（纯Python实现）
+
+### 可选依赖
+
+- **pypinyin** - 用于导入词库到 Rime（生成拼音）
+  ```bash
+  pip3 install pypinyin
+  ```
+
+- **Homebrew** - 用于安装 Rime 输入法（macOS）
+  ```bash
+  # 安装 Homebrew（如果未安装）
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
 
 ## 🔍 工作原理
 
@@ -217,6 +233,52 @@ bin文件包含的信息比纯文本多：
 3. **使用已有词典**：
    - 项目已包含一些常用词词典示例
    - 可以编辑 `data/dicts/` 目录下的词典文件
+
+## 🎯 导入到 Rime 输入法
+
+### 安装 Rime 输入法
+
+项目提供了 Rime 输入法的一键安装脚本，包含：
+- Squirrel (Rime for macOS)
+- rime-ice (雾凇拼音) 方案
+- 微信键盘风格主题
+- iCloud 自动备份
+- emoji 支持
+
+```bash
+# 运行安装脚本
+bash install_rime.sh
+```
+
+安装完成后：
+1. 打开 **系统设置 > 键盘 > 输入法**
+2. 点击 **+** 添加输入法
+3. 搜索并添加「鼠鬚管」或「Squirrel」
+4. 使用 `Control+Space` 或 `Command+Space` 切换输入法
+
+### 导入词库到 Rime
+
+将过滤后的词库导入到 Rime：
+
+```bash
+# 导入最终版本的词库（不带词频）
+python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final.txt
+
+# 或指定输出文件
+python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final.txt ~/Library/Rime/custom_phrase.txt
+```
+
+导入后需要重新部署 Rime 配置：
+
+```bash
+/Library/Input\ Methods/Squirrel.app/Contents/MacOS/Squirrel --reload
+```
+
+**注意**：导入脚本需要安装 `pypinyin` 库：
+
+```bash
+pip3 install pypinyin
+```
 
 ## 📝 示例输出
 
@@ -281,6 +343,11 @@ MIT License
 本工具的bin文件解析逻辑参考了以下项目：
 - [rose](https://github.com/nopdan/rose) - 专业的词库转换工具
 - [深蓝词库转换](https://github.com/studyzy/imewlconverter) - 另一个优秀的词库转换工具
+
+Rime 输入法相关：
+- [Rime](https://github.com/rime) - 中州韵输入法引擎
+- [rime-ice](https://github.com/iDvel/rime-ice) - 雾凇拼音方案
+- [rime-emoji](https://github.com/rime/rime-emoji) - Emoji 输入支持
 
 ## 🤝 贡献
 

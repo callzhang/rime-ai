@@ -8,6 +8,7 @@ bin -> 带词频 -> final / final_带词频
 
 import os
 import sys
+import shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -29,6 +30,53 @@ def find_latest_bin_file(data_dir):
     # 按修改时间排序，返回最新的
     latest = max(bin_files, key=lambda p: p.stat().st_mtime)
     return latest
+
+
+def get_icloud_backup_dir():
+    """获取iCloud Backup目录路径"""
+    icloud_backup = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs" / "Backup"
+    return icloud_backup
+
+
+def backup_to_icloud(source_files, backup_subdir="sogou_dict"):
+    """
+    将文件备份到iCloud Backup目录
+    
+    Args:
+        source_files: 要备份的文件路径列表（Path对象或字符串）
+        backup_subdir: Backup目录下的子目录名
+    """
+    icloud_backup = get_icloud_backup_dir()
+    if not icloud_backup.exists():
+        print(f"⚠️  警告: iCloud Backup目录不存在: {icloud_backup}")
+        print("   跳过自动备份")
+        return False
+    
+    # 创建子目录
+    backup_dir = icloud_backup / backup_subdir
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    backed_up_files = []
+    for source_file in source_files:
+        source_path = Path(source_file)
+        if not source_path.exists():
+            print(f"⚠️  警告: 源文件不存在，跳过备份: {source_path}")
+            continue
+        
+        # 保持原文件名
+        dest_path = backup_dir / source_path.name
+        
+        # 复制文件
+        shutil.copy2(source_path, dest_path)
+        backed_up_files.append(dest_path)
+        print(f"  ✅ 已备份: {source_path.name} -> {dest_path}")
+    
+    if backed_up_files:
+        print(f"\n📦 备份完成: {len(backed_up_files)} 个文件已备份到 iCloud")
+        print(f"   备份位置: {backup_dir}")
+        return True
+    
+    return False
 
 
 def main():
@@ -163,6 +211,28 @@ def main():
     
     print("文件位置:")
     print(f"  {data_dir}")
+    print()
+    
+    # 自动备份到iCloud
+    print(f"\n{'='*60}")
+    print("自动备份到 iCloud")
+    print(f"{'='*60}")
+    
+    files_to_backup = []
+    # 备份原始bin文件
+    if bin_file.exists():
+        files_to_backup.append(bin_file)
+    # 备份最终版本文件
+    if final_with_freq.exists():
+        files_to_backup.append(final_with_freq)
+    if final_file.exists():
+        files_to_backup.append(final_file)
+    
+    if files_to_backup:
+        backup_to_icloud(files_to_backup, backup_subdir="sogou_dict")
+    else:
+        print("⚠️  没有文件需要备份")
+    
     print()
     print("使用建议:")
     print(f"  - 推荐使用: {final_with_freq.name if final_with_freq.exists() else 'N/A'}")
