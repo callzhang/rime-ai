@@ -92,9 +92,41 @@ install_plum() {
     fi
 }
 
-# 步骤3: 安装 rime-ice 方案
+# 步骤3: 检查 rime-lua 支持
+install_rime_lua() {
+    print_section "步骤 3/8: 检查 rime-lua 支持"
+    
+    # Rime (Squirrel) 通常已内置 Lua 支持
+    # 如果使用 plum 安装，可以尝试：
+    bash rime-install lua
+    
+    print_info "检查 Lua 支持..."
+    
+    # 检查 Squirrel 是否支持 Lua
+    if [ -f "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel" ]; then
+        print_success "Squirrel 已安装（通常已内置 Lua 支持）"
+        print_info "如果 Lua 功能不工作，可能需要："
+        print_info "  1. 更新 Squirrel 到最新版本"
+        print_info "  2. 或从源码编译支持 Lua 的版本"
+    else
+        print_warning "Squirrel 未找到"
+    fi
+    
+    # 尝试通过 plum 安装（如果可用）
+    if [ -d "$PLUM_DIR" ]; then
+        print_info "尝试通过 plum 安装 Lua 支持..."
+        cd "$PLUM_DIR"
+        if bash rime-install lua 2>/dev/null; then
+            print_success "Lua 支持已安装"
+        else
+            print_warning "plum 安装失败（可能已内置或不需要）"
+        fi
+    fi
+}
+
+# 步骤4: 安装 rime-ice 方案
 install_rime_ice() {
-    print_section "步骤 3/6: 安装 rime-ice (雾凇拼音)"
+    print_section "步骤 4/7: 安装 rime-ice (雾凇拼音)"
     
     cd "$PLUM_DIR"
     
@@ -104,9 +136,9 @@ install_rime_ice() {
     print_success "rime-ice 安装完成"
 }
 
-# 步骤4: 配置主题
+# 步骤5: 配置主题
 configure_theme() {
-    print_section "步骤 4/6: 配置主题 (微信键盘风格)"
+    print_section "步骤 5/7: 配置主题 (微信键盘风格)"
     
     mkdir -p "$RIME_DIR"
     
@@ -168,9 +200,9 @@ EOF
     print_success "主题配置完成"
 }
 
-# 步骤5: 配置 iCloud 自动备份
+# 步骤6: 配置 iCloud 自动备份
 configure_icloud_backup() {
-    print_section "步骤 5/6: 配置 iCloud 自动备份"
+    print_section "步骤 6/7: 配置 iCloud 自动备份"
     
     # 创建 iCloud 备份目录
     if [ ! -d "$ICLOUD_BACKUP_DIR" ]; then
@@ -196,9 +228,9 @@ configure_icloud_backup() {
     fi
 }
 
-# 步骤6: 安装 rime-emoji
+# 步骤7: 安装 rime-emoji
 install_rime_emoji() {
-    print_section "步骤 6/6: 安装 rime-emoji"
+    print_section "步骤 7/8: 安装 rime-emoji"
     
     cd "$PLUM_DIR"
     
@@ -208,32 +240,238 @@ install_rime_emoji() {
     print_info "配置 rime-ice 以支持 emoji..."
     bash rime-install emoji:customize:schema=rime_ice
     
-    # 修复 rime_ice.custom.yaml 配置
-    if [ -f "$RIME_DIR/rime_ice.custom.yaml" ]; then
-        cat > "$RIME_DIR/rime_ice.custom.yaml" << 'EOF'
-patch:
-  # Emoji 建议功能
-  switches/@next:
-    name: emoji_suggestion
-    reset: 1
-    states: [ "🈚︎", "🈶️" ]
-  'engine/filters/@before 0':
-    simplifier@emoji_suggestion
-  emoji_suggestion:
-    opencc_config: emoji.json
-    option_name: emoji_suggestion
-    tips: none
-    inherit_comment: false
-EOF
-        print_success "emoji 配置已更新"
-    fi
+    # 注意：Emoji 功能已在 rime_ice.schema.yaml 中配置（开关名：emoji）
+    # 无需在 custom.yaml 中重复配置
     
     print_success "rime-emoji 安装完成"
 }
 
-# 步骤7: 导入词库到 Rime
+# 步骤8: 启用学习新词功能
+enable_user_dict_learning() {
+    print_section "步骤 8/9: 启用学习新词功能"
+    
+    mkdir -p "$RIME_DIR"
+    
+    # 读取或创建 rime_ice.custom.yaml
+    if [ -f "$RIME_DIR/rime_ice.custom.yaml" ]; then
+        # 检查是否已配置学习功能
+        if grep -q "translator/enable_user_dict" "$RIME_DIR/rime_ice.custom.yaml"; then
+            print_success "学习新词功能已配置"
+            return 0
+        fi
+        
+        # 追加配置（使用正确的路径方式）
+        cat >> "$RIME_DIR/rime_ice.custom.yaml" << 'EOF'
+
+  # 启用学习新词功能（正确的配置方式）
+  'translator/enable_user_dict': true        # 启用用户词典（自动学习新词）
+  'translator/enable_sentence': true         # 启用句子输入（整句记忆）
+  'translator/enable_completion': true       # 启用补全功能
+  'translator/enable_encoder': true          # 启用编码器
+EOF
+    else
+        # 创建新配置文件
+        cat > "$RIME_DIR/rime_ice.custom.yaml" << 'EOF'
+patch:
+  # 启用学习新词功能（正确的配置方式）
+  'translator/enable_user_dict': true        # 启用用户词典（自动学习新词）
+  'translator/enable_sentence': true         # 启用句子输入（整句记忆）
+  'translator/enable_completion': true       # 启用补全功能
+  'translator/enable_encoder': true          # 启用编码器
+EOF
+    fi
+    
+    print_success "学习新词功能已启用"
+    print_info "功能说明："
+    echo "  - 用户词典：自动学习你输入的新词"
+    echo "  - 句子输入：支持整句输入和记忆"
+    echo "  - 补全功能：智能补全常用短语"
+}
+
+# 步骤9: 安装 AI 问答系统
+install_ai_system() {
+    print_section "步骤 9/10: 安装 AI 问答系统"
+    
+    # 获取脚本所在目录
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    RIME_AI_DIR="$SCRIPT_DIR/Rime"
+    TARGET_RIME_DIR="$RIME_DIR"
+    TARGET_LUA_DIR="$TARGET_RIME_DIR/lua"
+    
+    # 检查 Python3
+    if ! command -v python3 &>/dev/null; then
+        print_error "未检测到 python3，AI 功能需要 Python3"
+        print_info "请先安装 Python3: brew install python3"
+        return 1
+    fi
+    
+    print_info "检查 Python 依赖..."
+    # 检查并安装 requests
+    if ! python3 -c "import requests" 2>/dev/null; then
+        print_info "正在安装 requests..."
+        if pip3 install --user requests 2>/dev/null; then
+            print_success "requests 安装完成"
+        else
+            print_warning "requests 安装失败，请手动安装: pip3 install requests"
+        fi
+    else
+        print_success "requests 已安装"
+    fi
+    
+    # 创建目标目录
+    mkdir -p "$TARGET_LUA_DIR"
+    
+    # 复制 Lua 脚本
+    print_info "复制 Lua 脚本..."
+    local lua_files=("ai_processor.lua" "ai_translator.lua" "ai_filter.lua")
+    for file in "${lua_files[@]}"; do
+        local source_file="$RIME_AI_DIR/lua/$file"
+        local target_file="$TARGET_LUA_DIR/$file"
+        
+        if [ -f "$source_file" ]; then
+            cp "$source_file" "$target_file"
+            print_success "已复制 $file"
+        else
+            print_warning "$file 不存在，跳过"
+        fi
+    done
+    
+    # 复制 Python 脚本
+    print_info "复制 Python 脚本..."
+    local python_files=("ai_streamer.py")
+    for file in "${python_files[@]}"; do
+        local source_file="$RIME_AI_DIR/$file"
+        local target_file="$TARGET_RIME_DIR/$file"
+        
+        if [ -f "$source_file" ]; then
+            cp "$source_file" "$target_file"
+            chmod +x "$target_file"
+            print_success "已复制 $file"
+        else
+            print_warning "$file 不存在，跳过"
+        fi
+    done
+    
+    # 更新 rime_ice.custom.yaml 配置
+    print_info "更新 rime_ice.custom.yaml 配置..."
+    local schema_file="$TARGET_RIME_DIR/rime_ice.custom.yaml"
+    
+    # 检查文件是否存在
+    if [ ! -f "$schema_file" ]; then
+        print_info "创建 rime_ice.custom.yaml..."
+        cat > "$schema_file" << 'EOF'
+patch:
+EOF
+    fi
+    
+    # 检查是否已配置 AI 功能
+    local has_ai_config=false
+    if grep -q "ai_cmd:" "$schema_file" && \
+       grep -q "lua_translator@\*ai_translator" "$schema_file" && \
+       grep -q "lua_filter@\*ai_filter" "$schema_file"; then
+        has_ai_config=true
+    fi
+    
+    if [ "$has_ai_config" = false ]; then
+        print_info "添加 AI 配置..."
+        
+        # 检查是否已有 recognizer 配置
+        local has_recognizer=false
+        if grep -q "^  recognizer:" "$schema_file"; then
+            has_recognizer=true
+        fi
+        
+        # 检查是否已有 engine/translators 配置
+        local has_translators=false
+        if grep -q "^  engine/translators" "$schema_file"; then
+            has_translators=true
+        fi
+        
+        # 检查是否已有 engine/filters 配置
+        local has_filters=false
+        if grep -q "^  engine/filters" "$schema_file"; then
+            has_filters=true
+        fi
+        
+        # 添加 recognizer（如果不存在）
+        if [ "$has_recognizer" = false ] && ! grep -q "ai_cmd:" "$schema_file"; then
+            cat >> "$schema_file" << 'EOF'
+
+  # AI 聊天功能
+  # 使用方式：@ai 输入 或 ai:输入
+  recognizer:
+    patterns:
+      ai_cmd: "^(@ai|ai:|chat:|tr:)"  # 匹配 @ai 或 ai: 开头的输入
+EOF
+        elif [ "$has_recognizer" = true ] && ! grep -q "ai_cmd:" "$schema_file"; then
+            # 已有 recognizer，但缺少 ai_cmd pattern
+            print_warning "检测到已有 recognizer 配置，请手动添加 ai_cmd pattern"
+        fi
+        
+        # 添加 translator（如果不存在）
+        if [ "$has_translators" = false ] && ! grep -q "lua_translator@\*ai_translator" "$schema_file"; then
+            cat >> "$schema_file" << 'EOF'
+  engine/translators/+:
+    - lua_translator@*ai_translator
+EOF
+        elif [ "$has_translators" = true ] && ! grep -q "lua_translator@\*ai_translator" "$schema_file"; then
+            # 已有 translators，但缺少 ai_translator
+            print_warning "检测到已有 engine/translators 配置，请手动添加 lua_translator@*ai_translator"
+        fi
+        
+        # 添加 filter（如果不存在）
+        if [ "$has_filters" = false ] && ! grep -q "lua_filter@\*ai_filter" "$schema_file"; then
+            cat >> "$schema_file" << 'EOF'
+  engine/filters/+:
+    - lua_filter@*ai_filter
+EOF
+        elif [ "$has_filters" = true ] && ! grep -q "lua_filter@\*ai_filter" "$schema_file"; then
+            # 已有 filters，但缺少 ai_filter
+            print_warning "检测到已有 engine/filters 配置，请手动添加 lua_filter@*ai_filter"
+        fi
+        
+        print_success "AI 配置已添加"
+    else
+        print_success "AI 配置已存在"
+    fi
+    
+    # 检查是否需要添加 processor（如果配置中没有）
+    if ! grep -q "lua_processor@\*ai_processor" "$schema_file"; then
+        print_info "提示：processor 配置默认未启用，如需启用请手动添加"
+    fi
+    
+    # 创建 .env 文件模板（如果不存在）
+    local env_file="$TARGET_RIME_DIR/.env"
+    if [ ! -f "$env_file" ]; then
+        print_info "创建 .env 文件模板..."
+        cat > "$env_file" << 'EOF'
+# OpenAI API 配置
+# 请设置你的 API Key 和 Base URL
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+EOF
+        print_success ".env 文件模板已创建"
+        print_warning "请编辑 $env_file 设置你的 API Key"
+    else
+        print_success ".env 文件已存在"
+    fi
+    
+    print_success "AI 问答系统安装完成"
+    print_info "下一步："
+    echo "  1. 编辑 $env_file 设置 OPENAI_API_KEY 和 OPENAI_BASE_URL"
+    echo "  2. 或设置环境变量: export OPENAI_API_KEY='sk-xxx'"
+    echo "  3. 重新部署 Rime 配置"
+    echo ""
+    print_info "使用方法："
+    echo "  - 输入 'ai:' 或 '@ai' 开始 AI 对话"
+    echo "  - 输入 'chat:' 进行聊天"
+    echo "  - 输入 'tr:' 进行翻译"
+    echo "  - 输入问题后按回车键触发 AI"
+}
+
+# 步骤10: 导入词库到 Rime
 import_dict_to_rime() {
-    print_section "步骤 7/7: 导入词库到 Rime"
+    print_section "步骤 9/9: 导入词库到 Rime"
     
     # 获取脚本所在目录
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -245,11 +483,16 @@ import_dict_to_rime() {
         return 0
     fi
     
-    # 查找所有 *_final.txt 文件（不包括 *_final_带词频.txt）
-    DICT_FILE=$(find "$DATA_DIR" -maxdepth 1 -name "*_final.txt" -type f ! -name "*_final_带词频.txt" | sort -r | head -1)
+    # 优先查找带词频的版本
+    DICT_FILE=$(find "$DATA_DIR" -maxdepth 1 -name "*_final_带词频.txt" -type f | sort -r | head -1)
+    
+    # 如果没找到带词频的版本，查找不带词频的版本
+    if [ -z "$DICT_FILE" ]; then
+        DICT_FILE=$(find "$DATA_DIR" -maxdepth 1 -name "*_final.txt" -type f ! -name "*_final_带词频.txt" | sort -r | head -1)
+    fi
     
     if [ -z "$DICT_FILE" ]; then
-        print_warning "未找到词库文件（*_final.txt），跳过导入"
+        print_warning "未找到词库文件（*_final.txt 或 *_final_带词频.txt），跳过导入"
         print_info "提示: 运行 python3 convert.py 生成词库文件"
         return 0
     fi
@@ -338,10 +581,13 @@ main() {
     # 执行安装步骤
     install_squirrel
     install_plum
+    install_rime_lua
     install_rime_ice
     configure_theme
     configure_icloud_backup
     install_rime_emoji
+    enable_user_dict_learning
+    install_ai_system
     deploy_rime
     import_dict_to_rime
     
@@ -362,7 +608,13 @@ main() {
     echo "  - Emoji 支持：输入中文词汇时自动显示相关 emoji"
     echo "  - iCloud 备份：用户数据自动备份到 iCloud"
     echo "  - 微信键盘主题：浅色/深色主题自动切换"
+    echo "  - 学习新词：自动学习你输入的新词和短语"
+    echo "  - AI 问答系统：支持 AI 对话、翻译等功能（需配置 API Key）"
     echo "  - 词库导入：自动导入搜狗词库（如果存在）"
+    echo ""
+    print_info "AI 功能配置："
+    echo "  编辑 ~/Library/Rime/.env 设置 OPENAI_API_KEY"
+    echo "  或设置环境变量: export OPENAI_API_KEY='sk-xxx'"
     echo ""
 }
 

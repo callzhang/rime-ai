@@ -246,13 +246,21 @@ def main():
     print(f"  - 导入其他输入法: {final_file.name if final_file.exists() else 'N/A'}")
     
     # 步骤3: 自动导入到 Rime（如果可用）
-    if RIME_AVAILABLE and final_file.exists():
+    # 优先使用带词频的版本
+    rime_input_file = final_with_freq if final_with_freq.exists() else final_file
+    
+    if RIME_AVAILABLE and rime_input_file.exists():
         print(f"\n{'='*60}")
         print("步骤3: 导入到 Rime 输入法")
         print(f"{'='*60}")
         
+        if final_with_freq.exists():
+            print(f"使用带词频版本: {final_with_freq.name}")
+        else:
+            print(f"使用不带词频版本: {final_file.name}")
+        
         try:
-            convert_to_rime_format(str(final_file), output_file=None)
+            convert_to_rime_format(str(rime_input_file), output_file=None)
             print("\n✅ Rime 词库导入成功!")
             print("\n下一步:")
             print("  1. 部署 Rime 配置（运行以下命令）:")
@@ -264,7 +272,10 @@ def main():
         except Exception as e:
             print(f"\n⚠️  导入到 Rime 时出错: {e}")
             print("   你可以稍后手动运行:")
-            print(f"   python3 import_to_rime.py {final_file}")
+            if final_with_freq.exists():
+                print(f"   python3 import_to_rime.py {final_with_freq}")
+            else:
+                print(f"   python3 import_to_rime.py {final_file}")
     elif not RIME_AVAILABLE:
         print(f"\n💡 提示: 要自动导入到 Rime，请安装 pypinyin:")
         print("   pip3 install pypinyin")

@@ -1,365 +1,466 @@
-# 搜狗拼音词库导出工具
+# 🚀 Rime AI 输入法 - 全球首款流式 AI 输入法
 
-一个纯Python实现的搜狗拼音输入法个人词库导出工具，支持导出带词频的词库，并可过滤常用词。
+> **🎯 革命性创新**：在输入法中直接呼唤 AI，实现**实时流式 AI 对话**，无需切换应用，输入即得答案！
 
-## ✨ 特性
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
-- ✅ **纯Python实现** - 无需外部依赖，直接解析bin文件
-- ✅ **支持词频导出** - 导出词条和使用频率信息
-- ✅ **智能过滤** - 自动过滤单字、常用词、重复字符等
-- ✅ **一键转换** - 自动查找最新bin文件并完成整个转换流程
-- ✅ **常用词词典** - 支持从外部词典文件加载常用词（中英文）
-- ✅ **保持原始顺序** - 过滤后保持词条的原始顺序
+---
+
+## ✨ 核心亮点
+
+### 🌟 **全球首款流式 AI 输入法**
+
+**在输入法中直接呼唤 AI，实时流式输出答案！**
+
+- ✅ **无需切换应用** - 在任何应用中直接使用 AI
+- ✅ **实时流式输出** - AI 回答逐字显示，无需等待
+- ✅ **无缝集成** - 完全融入输入法体验，就像输入普通文字
+- ✅ **多场景支持** - 聊天、翻译、代码生成，一键切换
+
+**使用示例**：
+```
+输入: chat:台湾在哪里
+回车: [AI 实时流式输出] 台湾位于东亚、东海与南海之间...
+```
+
+---
+
+## 🎯 项目定位
+
+本项目不仅仅是一个词库导入工具，而是一个**完整的智能输入法解决方案**：
+
+```
+词库导入 → Rime 安装 → 自动配置 → AI 集成 → 一键部署
+```
+
+### 📋 完整功能流程
+
+1. **📥 词库导入** - 从搜狗输入法导出并优化个人词库
+2. **⚙️ Rime 安装** - 一键安装 Rime 输入法（Squirrel for macOS）
+3. **🎨 自动配置** - 自动配置主题、emoji、学习功能等
+4. **🤖 AI 集成** - 集成流式 AI 对话功能（全球首创）
+5. **🚀 一键部署** - 自动部署配置并打开项目主页
+
+---
 
 ## 🚀 快速开始
 
-### 1. 准备词库文件
+### 系统要求
 
-从搜狗输入法导出词库：
+⚠️ **目前仅支持 macOS 系统**
+
+本项目使用 Squirrel（Rime for macOS），因此需要 macOS 10.15 或更高版本。
+
+### 准备词库文件（可选）
+
+如果你想导入搜狗输入法的个人词库：
+
+1. **从搜狗输入法导出词库**：
+   - 打开搜狗输入法设置
+   - 进入"词库"选项
+   - 点击"导出/备份"
+   - 选择导出为 `.bin` 格式
+
+2. **将 .bin 文件放到项目目录**：
+   ```bash
+   # 将导出的 .bin 文件复制到 data/ 目录
+   cp ~/Downloads/搜狗词库备份_*.bin data/
+   ```
+
+### 一键安装（推荐）
+
+```bash
+# 1. 克隆项目
+git clone <repo-url>
+cd sogou_export
+
+# 2. 运行一键安装脚本
+bash install_rime.sh
+```
+
+**安装脚本会自动完成**：
+- ✅ 安装 Squirrel (Rime for macOS)
+- ✅ 安装 rime-ice 拼音方案
+- ✅ 配置微信键盘风格主题
+- ✅ 启用 emoji 支持
+- ✅ 配置 iCloud 自动备份
+- ✅ **安装流式 AI 功能**（全球首创）
+- ✅ 导入搜狗词库（如果存在）
+
+### 配置 AI 功能
+
+安装完成后，配置 OpenAI API：
+
+```bash
+# 编辑配置文件
+nano ~/Library/Rime/.env
+```
+
+添加以下内容：
+```env
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+```
+
+或设置环境变量：
+```bash
+export OPENAI_API_KEY='sk-xxx'
+export OPENAI_BASE_URL='https://api.openai.com/v1'
+```
+
+### 使用 AI 功能
+
+1. **切换到 Rime 输入法**（Control+Space 或 Command+Space）
+2. **输入 AI 命令**：
+   - `ai:你的问题` - AI 对话
+   - `chat:你的问题` - 聊天模式
+   - `tr:要翻译的内容` - 翻译模式
+3. **按回车键** - AI 会实时流式输出答案
+
+---
+
+## 🌟 核心功能
+
+### 1. 🤖 流式 AI 对话（全球首创）
+
+**在输入法中直接呼唤 AI，实时流式输出答案！**
+
+- **实时流式输出** - AI 回答逐字显示，无需等待完整响应
+- **无缝集成** - 完全融入输入法体验，就像输入普通文字
+- **多场景支持**：
+  - `ai:` - 通用 AI 对话
+  - `chat:` - 聊天模式
+  - `tr:` - 翻译模式
+
+**技术实现**：
+- Lua Processor 拦截按键事件
+- Python 脚本调用 OpenAI API
+- 实时流式输出到输入法候选框
+- 支持完整的 Unicode 字符处理
+
+### 2. 📥 搜狗词库导入
+
+**智能导出和优化搜狗输入法个人词库**
+
+- ✅ 纯 Python 实现，无需外部依赖
+- ✅ 支持词频导出，保留使用频率信息
+- ✅ 智能过滤：单字、常用词、重复字符等
+- ✅ 一键转换，自动查找最新 bin 文件
+
+**使用方法**：
+```bash
+# 将搜狗词库 .bin 文件放到 data/ 目录
+# 运行一键转换
+python3 convert.py
+```
+
+### 3. ⚙️ Rime 输入法一键安装
+
+**完整的 Rime 输入法安装和配置方案**
+
+- ✅ **Squirrel** - Rime for macOS
+- ✅ **rime-ice** - 雾凇拼音方案（推荐）
+- ✅ **微信键盘风格主题** - 浅色/深色自动切换
+- ✅ **Emoji 支持** - 输入中文自动显示相关 emoji
+- ✅ **iCloud 自动备份** - 用户数据自动同步
+- ✅ **学习新词功能** - 自动学习用户输入习惯
+
+### 4. 🎨 智能配置
+
+**自动配置所有必要设置**
+
+- 主题配置（微信键盘风格）
+- 候选词翻页键（`,` 和 `.`）
+- 以词定字快捷键（`[` 和 `]`）
+- 用户词典学习功能
+- AI 功能集成
+
+---
+
+## 📖 详细文档
+
+### 词库导入
+
+#### 准备词库文件
+
+**步骤 1：从搜狗输入法导出词库**
+
 1. 打开搜狗输入法设置
 2. 进入"词库"选项
 3. 点击"导出/备份"
 4. 选择导出为 `.bin` 格式
-5. 将文件放到 `data/` 目录
+5. 保存到本地（如 `~/Downloads/`）
 
-### 2. 一键转换
+**步骤 2：将 .bin 文件放到项目目录**
 
 ```bash
-# 自动查找data目录下最新的bin文件并完成整个转换流程
+# 将导出的 .bin 文件复制到项目的 data/ 目录
+cp ~/Downloads/搜狗词库备份_*.bin data/
+```
+
+**重要**：必须将 `.bin` 文件放在项目的 `data/` 目录下，`convert.py` 脚本会自动查找该目录下最新的 `.bin` 文件。
+
+#### 一键转换
+
+```bash
+# 确保 .bin 文件已在 data/ 目录下
+# 运行一键转换脚本
 python3 convert.py
 ```
 
 转换流程：
 1. 自动查找 `data/` 目录下最新的 `.bin` 文件
-2. 导出带词频的完整词库 → `{bin文件名}_带词频.txt`
-3. 过滤词库 → `{bin文件名}_final_带词频.txt` 和 `{bin文件名}_final.txt`
+2. 导出带词频的完整词库 → `data/{bin文件名}_带词频.txt`
+3. 智能过滤词库
+4. 生成最终版本：
+   - `data/{bin文件名}_final_带词频.txt` - 带词频版本（推荐）
+   - `data/{bin文件名}_final.txt` - 不带词频版本（可导入其他输入法）
 
-### 3. 查看结果
-
-转换完成后，在 `data/` 目录下会生成（基于bin文件名）：
-- `{bin文件名}_带词频.txt` - 完整词库（带词频）
-- `{bin文件名}_final_带词频.txt` - 最终版本（带词频）⭐ 推荐
-- `{bin文件名}_final.txt` - 最终版本（不带词频）⭐ 可导入其他输入法
-
-例如，如果bin文件是 `搜狗词库备份_2025_11_27.bin`，则生成：
-- `搜狗词库备份_2025_11_27_带词频.txt`
-- `搜狗词库备份_2025_11_27_final_带词频.txt`
-- `搜狗词库备份_2025_11_27_final.txt`
-
-## 📖 使用方法
-
-### 一键转换（推荐）
+#### 导入到 Rime
 
 ```bash
-python3 convert.py
+# 导入最终版本的词库
+python3 import_to_rime.py data/词库_final.txt
 ```
 
-### 手动转换
+### AI 功能使用
 
-```bash
-# 步骤1: 导出带词频的词库
-python3 sogou_export_with_freq.py data/搜狗词库备份_2025_11_27.bin
+#### 基本用法
 
-# 步骤2: 过滤词库
-python3 filter_dict.py data/词库_带词频.txt --min-freq=10
-```
+1. **切换到 Rime 输入法**
+2. **输入 AI 命令**：
+   ```
+   ai:台湾在哪里
+   ```
+3. **按回车键** - AI 会实时流式输出答案
 
-### 过滤选项
+#### 支持的命令
 
-```bash
-# 基本过滤（默认：词频>=10, 过滤单字、常用词等）
-python3 filter_dict.py data/搜狗词库备份_2025_11_27_带词频.txt --min-freq=10
+- `ai:` - 通用 AI 对话
+- `chat:` - 聊天模式
+- `tr:` - 翻译模式
 
-# 不过滤常用词
-python3 filter_dict.py data/搜狗词库备份_2025_11_27_带词频.txt --min-freq=10 --no-common
+#### 技术细节
 
-# 不过滤单字
-python3 filter_dict.py data/搜狗词库备份_2025_11_27_带词频.txt --min-freq=10 --no-single
+- **Processor** - 拦截按键事件，处理 AI 命令
+- **Translator** - 生成 AI 提示候选词
+- **Filter** - 过滤和优化候选词显示
+- **Python 脚本** - 调用 OpenAI API，实现流式输出
 
-# 指定自定义常用词词典
-python3 filter_dict.py data/搜狗词库备份_2025_11_27_带词频.txt --dict=my_dict.txt --min-freq=10
-```
+详细技术文档请参考：
+- [Rime Lua 执行逻辑](docs/rime_lua_execution_logic.md)
+- [调试指南](docs/debugging.md)
+
+---
 
 ## 📁 项目结构
 
 ```
 sogou_export/
-├── convert.py                    # 一键转换脚本（主入口）
+├── convert.py                    # 一键转换脚本（词库导出）
 ├── sogou_export_with_freq.py    # 导出带词频词库
 ├── filter_dict.py               # 词库过滤脚本
-├── download_dict.py             # 词典下载辅助工具（可选）
-├── import_to_rime.py            # 导入词库到 Rime 输入法
-├── install_rime.sh              # Rime 输入法一键安装脚本
-├── README.md                    # 本文件
-├── .gitignore                   # Git忽略文件
+├── import_to_rime.py            # 导入词库到 Rime
+├── install_rime.sh              # Rime 一键安装脚本（包含 AI 功能）
+│
+├── Rime/                        # Rime 配置文件
+│   ├── lua/                     # Lua 脚本
+│   │   ├── ai_processor.lua    # AI 处理器（拦截按键）
+│   │   ├── ai_translator.lua    # AI 翻译器（生成候选词）
+│   │   └── ai_filter.lua        # AI 过滤器（优化显示）
+│   ├── ai_streamer.py           # AI 流式输出脚本
+│   └── rime_ice.custom.yaml     # Rime 配置文件
+│
+├── docs/                        # 文档目录
+│   ├── rime_lua_execution_logic.md  # Lua 执行逻辑详解
+│   └── debugging.md            # 调试指南
+│
 └── data/                        # 词库数据目录
-    ├── *.bin                    # 原始词库备份文件（不提交）
-    ├── {bin文件名}_带词频.txt   # 完整词库（带词频）
-    ├── {bin文件名}_final_带词频.txt  # 最终版本（带词频）⭐
-    ├── {bin文件名}_final.txt    # 最终版本（不带词频）⭐
-    ├── README.md                # 数据目录说明
-    └── dicts/                   # 常用词词典目录
-        ├── common_words_merged.txt  # 合并的中英文词典
-        ├── chinese_80000.txt         # 中文词库
-        ├── english_10000.txt         # 英文常用词
-        └── README.md                 # 词典说明
+    ├── *.bin                    # 原始词库备份文件（将搜狗导出的 .bin 文件放在这里）
+    └── dicts/                   # 常用词词典
 ```
 
-## 🔧 过滤规则
+---
 
-- ✅ **词频过滤** - 过滤词频小于阈值的词（默认10）
-- ✅ **单字过滤** - 过滤单个汉字
-- ✅ **常用词过滤** - 从外部词典文件读取常用词并过滤
-- ✅ **重复字符** - 过滤如"啊啊啊"、"哈哈哈"等
-- ✅ **语气词组合** - 过滤如"啊哈哈"、"哈啊哈"等
-- ✅ **纯数字/标点** - 过滤纯数字和标点符号
-- ⚙️ **可选** - 过滤纯英文词
+## 🔧 技术架构
 
-## 📚 常用词词典
+### AI 功能架构
 
-### 使用默认词典
+```
+用户输入 (ai:问题)
+    ↓
+Lua Processor (拦截按键)
+    ↓
+Lua Translator (生成提示)
+    ↓
+用户按回车
+    ↓
+Lua Processor (触发 AI)
+    ↓
+Python ai_streamer.py (调用 OpenAI API)
+    ↓
+实时流式输出 (逐字显示)
+    ↓
+输入法候选框 (实时更新)
+```
 
-脚本会自动从 `data/dicts/` 目录查找词典文件。如果目录中有词典文件，会自动使用。
+### 核心技术
 
-### 下载词典
+- **Rime Lua** - 输入法脚本引擎
+- **OpenAI API** - AI 对话接口
+- **流式输出** - 实时逐字显示
+- **Unicode 处理** - 完整支持多语言字符
 
-可以使用 `download_dict.py` 下载常用词词典：
+---
+
+## 🎯 使用场景
+
+### 1. 快速查询
+
+在任何应用中直接查询信息：
+```
+ai:Python 如何读取文件
+```
+
+### 2. 实时翻译
+
+快速翻译文本：
+```
+tr:Hello, how are you?
+```
+
+### 3. 代码生成
+
+生成代码片段：
+```
+ai:写一个 Python 函数计算斐波那契数列
+```
+
+### 4. 智能对话
+
+与 AI 进行自然对话：
+```
+chat:今天天气怎么样？
+```
+
+---
+
+## ⚙️ 系统要求
+
+⚠️ **重要提示：目前仅支持 macOS 系统**
+
+- **操作系统**: macOS 10.15+（必需）
+- **Python**: 3.6+
+- **依赖**:
+  - `requests` - HTTP 请求库（AI 功能需要）
+  - `pypinyin` - 拼音生成（词库导入需要）
+
+**为什么只支持 macOS？**
+
+本项目使用 Squirrel（Rime for macOS）作为输入法前端，因此只能在 macOS 系统上运行。Windows 和 Linux 用户可以使用对应的 Rime 前端（小狼毫、中州韻），但需要手动配置，本项目暂不提供自动安装脚本。
+
+### 安装依赖
 
 ```bash
-# 列出可用资源
-python3 download_dict.py list
+# 安装所有依赖
+pip3 install -r requirements.txt
 
-# 下载英文常用词（10000词）
-python3 download_dict.py https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt english_10000.txt
+# 或单独安装
+pip3 install requests pypinyin
 ```
 
-### 词典文件格式
+---
 
-- 每行一个词条
-- 支持 `#` 开头的注释行
-- 支持制表符分隔的格式（只取第一列）
-- 编码：UTF-8（也支持GBK、UTF-16等）
+## 🔍 常见问题
 
-## 📊 输出格式
+### AI 功能无法使用？
 
-### 带词频格式
-
-```
-词条\t词频
-```
-
-示例：
-```
-我	24355
-的	23374
-是	17639
-```
-
-### 不带词频格式
-
-```
-词条
-```
-
-示例：
-```
-数据
-这个
-我们
-```
-
-## ⚙️ 依赖
-
-### 核心依赖
-
-- **Python 3.6+** - 无需外部依赖（纯Python实现）
-
-### 可选依赖
-
-- **pypinyin** - 用于导入词库到 Rime（生成拼音）
-  
-  使用 requirements.txt 安装（推荐）：
-  ```bash
-  pip3 install -r requirements.txt
-  ```
-  
-  或单独安装：
-  ```bash
-  pip3 install pypinyin
-  ```
-
-- **Homebrew** - 用于安装 Rime 输入法（macOS）
-  ```bash
-  # 安装 Homebrew（如果未安装）
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  ```
-
-## 🔍 工作原理
-
-1. **解析bin文件** - `sogou_export_with_freq.py` 直接解析搜狗词库的二进制格式，提取词条和词频信息
-2. **过滤词库** - `filter_dict.py` 根据规则过滤词库，去除无意义词条
-3. **生成最终文件** - 自动生成带词频和不带词频两个版本
-
-## ❓ 常见问题
-
-### 为什么bin文件比txt文件大很多？
-
-bin文件包含的信息比纯文本多：
-- **词条文本**：词条本身
-- **拼音信息**：每个词条的拼音编码
-- **词频数据**：词条的使用频率
-- **索引结构**：用于快速查找的数据结构
-- **元数据**：文件头、版本信息等
-
-因此2.2MB的bin文件导出为纯文本后只有约600KB。
-
-### 为什么导出的词条数量与搜狗显示的不一致？
-
-**常见情况**：搜狗显示25.5万条，但bin文件只有5.7万条
-
-可能的原因：
-1. **统计口径不同**：搜狗显示的25.5万可能是所有词库的总数（系统词库+个人词库），而bin文件只包含**个人词库**
-2. **系统词库不包含**：bin备份文件通常只包含用户添加的个人词库，不包含搜狗自带的系统词库
-3. **重复词条**：bin文件中可能有重复词条，导出时会去重
-
-建议：
-- 在搜狗输入法设置中查看"个人词库"的具体数量（不是总词库数）
-- 使用带词频的版本可以查看详细的词条统计
-
-### 如何获取常用词词典？
-
-1. **使用下载脚本**：
+1. **检查 API Key**：
    ```bash
-   python3 download_dict.py list  # 查看可用资源
+   # 检查配置文件
+   cat ~/Library/Rime/.env
    ```
 
-2. **手动下载**：
-   - 从GitHub搜索 "chinese common words" 或 "中文常用词"
-   - 下载词典文件到 `data/dicts/` 目录
+2. **检查 Python 依赖**：
+   ```bash
+   python3 -c "import requests"
+   ```
 
-3. **使用已有词典**：
-   - 项目已包含一些常用词词典示例
-   - 可以编辑 `data/dicts/` 目录下的词典文件
+3. **查看日志**：
+   ```bash
+   tail -f /tmp/rime_ai.log
+   ```
 
-## 🎯 导入到 Rime 输入法
+详细故障排除请参考：[故障排除指南](docs/squirrel_troubleshooting.md)
 
-### 安装 Rime 输入法
+### 词库导入问题？
 
-项目提供了 Rime 输入法的一键安装脚本，包含：
-- Squirrel (Rime for macOS)
-- rime-ice (雾凇拼音) 方案
-- 微信键盘风格主题
-- iCloud 自动备份
-- emoji 支持
+请参考 [词库导入文档](#词库导入) 部分。
 
-```bash
-# 运行安装脚本
-bash install_rime.sh
-```
+---
 
-安装完成后：
-1. 打开 **系统设置 > 键盘 > 输入法**
-2. 点击 **+** 添加输入法
-3. 搜索并添加「鼠鬚管」或「Squirrel」
-4. 使用 `Control+Space` 或 `Command+Space` 切换输入法
+## 🎉 特色功能对比
 
-### 导入词库到 Rime
+| 功能 | 本项目 | 其他输入法 |
+|------|--------|-----------|
+| 流式 AI 对话 | ✅ **全球首创** | ❌ 不支持 |
+| 词库导入 | ✅ 智能过滤 | ⚠️ 基础支持 |
+| 一键安装 | ✅ 全自动 | ❌ 手动配置 |
+| 主题配置 | ✅ 微信键盘风格 | ⚠️ 基础主题 |
+| Emoji 支持 | ✅ 自动显示 | ⚠️ 需手动启用 |
+| iCloud 备份 | ✅ 自动同步 | ❌ 不支持 |
 
-将过滤后的词库导入到 Rime：
-
-```bash
-# 导入最终版本的词库（不带词频）
-python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final.txt
-
-# 或指定输出文件
-python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final.txt ~/Library/Rime/custom_phrase.txt
-```
-
-导入后需要重新部署 Rime 配置：
-
-```bash
-/Library/Input\ Methods/Squirrel.app/Contents/MacOS/Squirrel --reload
-```
-
-**注意**：导入脚本需要安装 `pypinyin` 库：
-
-```bash
-pip3 install pypinyin
-```
-
-## 📝 示例输出
-
-```bash
-$ python3 convert.py
-
-============================================================
-搜狗词库一键转换工具
-============================================================
-
-正在查找最新的bin文件...
-✅ 找到bin文件: 搜狗词库备份_2025_11_27.bin
-   文件大小: 2.22 MB
-   修改时间: 2025-11-27 15:00:24
-
-============================================================
-步骤1: 导出带词频的词库
-============================================================
-✅ 导出成功: 57,625 个词条（带词频）
-
-词频统计:
-  最高词频: 24,355
-  最低词频: -16,797
-  平均词频: 25
-
-============================================================
-步骤2: 过滤词库
-============================================================
-正在从外部词典加载常用词...
-已加载总计 441,373 个常用词
-✅ 过滤成功: 3,972 个词条
-
-过滤统计:
-  - low_freq: 46,500
-  - single_char: 831
-  - common_words: 6,091
-
-============================================================
-✅ 转换完成!
-============================================================
-
-生成的文件:
-  📄 词库_带词频.txt
-     - 完整词库（带词频）
-     - 57,625 个词条
-
-  ⭐ 词库_final_带词频.txt
-     - 最终版本（带词频）
-     - 3,972 个词条
-
-  ⭐ 词库_final.txt
-     - 最终版本（不带词频）
-     - 3,972 个词条
-```
+---
 
 ## 📄 许可证
 
 MIT License
 
+---
+
 ## 🙏 致谢
 
-本工具的bin文件解析逻辑参考了以下项目：
-- [rose](https://github.com/nopdan/rose) - 专业的词库转换工具
-- [深蓝词库转换](https://github.com/studyzy/imewlconverter) - 另一个优秀的词库转换工具
+### 核心技术
 
-Rime 输入法相关：
 - [Rime](https://github.com/rime) - 中州韵输入法引擎
 - [rime-ice](https://github.com/iDvel/rime-ice) - 雾凇拼音方案
-- [rime-emoji](https://github.com/rime/rime-emoji) - Emoji 输入支持
+- [librime-lua](https://github.com/hchunhui/librime-lua) - Lua 脚本支持
+
+### 参考项目
+
+- [rose](https://github.com/nopdan/rose) - 词库转换工具
+- [深蓝词库转换](https://github.com/studyzy/imewlconverter) - 词库转换工具
+
+---
 
 ## 🤝 贡献
 
-欢迎提交Issue和Pull Request！
+欢迎提交 Issue 和 Pull Request！
 
-## 📮 反馈
+### 贡献指南
 
-如有问题或建议，请提交Issue。
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📮 反馈与支持
+
+- **问题反馈**: [GitHub Issues](https://github.com/your-repo/issues)
+- **功能建议**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- **技术文档**: [docs/](docs/)
+
+---
+
+## 🌟 Star History
+
+如果这个项目对你有帮助，请给一个 ⭐ Star！
+
+---
+
+**🎯 全球首款流式 AI 输入法，让 AI 触手可及！**

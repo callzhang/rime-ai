@@ -54,29 +54,57 @@ def convert_to_rime_format(input_file, output_file=None, min_freq=1):
     print(f"输出文件: {output_file}")
     print("-" * 60)
     
-    # 读取词条
-    words = []
+    # 读取词条（支持带词频和不带词频两种格式）
+    words_with_freq = []
+    has_freq = False
+    
     with open(input_path, 'r', encoding='utf-8') as f:
         for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            
+            # 检查是否包含制表符（带词频格式：词条\t词频）
+            if '\t' in line:
+                parts = line.split('\t', 1)
+                word = parts[0].strip()
+                if word:
+                    try:
+                        freq = int(parts[1].strip()) if len(parts) > 1 else 100
+                        words_with_freq.append((word, freq))
+                        has_freq = True
+                    except (ValueError, IndexError):
+                        # 如果词频解析失败，使用默认值
+                        words_with_freq.append((word, 100))
+            else:
+                # 不带词频格式：每行一个词
             word = line.strip()
             if word:
-                words.append(word)
+                    words_with_freq.append((word, 100))
     
-    print(f"读取到 {len(words):,} 个词条")
+    if has_freq:
+        print(f"读取到 {len(words_with_freq):,} 个词条（带词频）")
+        # 显示词频统计
+        freqs = [freq for _, freq in words_with_freq]
+        if freqs:
+            print(f"  词频范围: {min(freqs):,} - {max(freqs):,}")
+            print(f"  平均词频: {sum(freqs) // len(freqs):,}")
+    else:
+        print(f"读取到 {len(words_with_freq):,} 个词条（不带词频，使用默认值100）")
+    
     print("正在转换为Rime格式...")
     
     # 转换为Rime格式
     rime_entries = []
-    for i, word in enumerate(words, 1):
+    for i, (word, freq) in enumerate(words_with_freq, 1):
         if i % 1000 == 0:
-            print(f"  处理进度: {i:,}/{len(words):,}")
+            print(f"  处理进度: {i:,}/{len(words_with_freq):,}")
         
         # 生成拼音
         pinyin = word_to_pinyin(word)
         
         # Rime格式: 词条	拼音	词频
-        # 使用默认词频100（可以根据需要调整）
-        freq = 100
+        # 使用实际词频值（如果文件包含词频）
         rime_entries.append(f"{word}\t{pinyin}\t{freq}")
     
     # 写入文件
@@ -106,7 +134,11 @@ def main():
         print("搜狗词库导入Rime工具")
         print("=" * 60)
         print("用法: python3 import_to_rime.py <词库文件> [输出文件]")
+        print("\n支持格式:")
+        print("  - 带词频: 词条\\t词频 (推荐)")
+        print("  - 不带词频: 每行一个词条")
         print("\n示例:")
+        print("  python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final_带词频.txt")
         print("  python3 import_to_rime.py data/搜狗词库备份_2025_11_27_final.txt")
         print("  python3 import_to_rime.py data/词库_final.txt ~/Library/Rime/custom_phrase.txt")
         sys.exit(1)
