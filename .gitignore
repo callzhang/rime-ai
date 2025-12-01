@@ -1,7 +1,6 @@
 # 个人词库文件（包含个人信息，不应提交）
 data/*.bin
-data/词库_*.txt
-data/词库_*.txt.bak
+data/*.txt
 
 # 词典文件（可以提交，但大文件建议使用Git LFS）
 # data/dicts/*.txt
