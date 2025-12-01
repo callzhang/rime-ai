@@ -265,13 +265,15 @@ sogou_export/
 ├── import_to_rime.py            # 导入词库到 Rime
 ├── install_rime.sh              # Rime 一键安装脚本（包含 AI 功能）
 │
-├── Rime/                        # Rime 配置文件
+├── rime_config/                 # Rime 配置文件（项目文件）
 │   ├── lua/                     # Lua 脚本
 │   │   ├── ai_processor.lua    # AI 处理器（拦截按键）
 │   │   ├── ai_translator.lua    # AI 翻译器（生成候选词）
 │   │   └── ai_filter.lua        # AI 过滤器（优化显示）
 │   ├── ai_streamer.py           # AI 流式输出脚本
-│   └── rime_ice.custom.yaml     # Rime 配置文件
+│   ├── rime_ice.schema.yaml     # Rime 输入方案配置
+│   └── rime_ice.custom.yaml     # Rime 自定义配置
+├── Rime -> ~/Library/Rime       # 符号链接（指向用户 Rime 目录）
 │
 ├── docs/                        # 文档目录
 │   ├── rime_lua_execution_logic.md  # Lua 执行逻辑详解

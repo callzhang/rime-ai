@@ -53,9 +53,52 @@ check_command() {
     fi
 }
 
+# 步骤0: 检查并安装 Homebrew 和 Python3
+install_prerequisites() {
+    print_section "步骤 0/10: 检查系统依赖"
+    
+    # 检查并安装 Homebrew
+    if ! check_command brew; then
+        print_info "未检测到 Homebrew，正在安装..."
+        print_warning "安装 Homebrew 需要管理员权限，可能需要输入密码"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # 添加 Homebrew 到 PATH（如果是 Apple Silicon Mac）
+        if [ -f "/opt/homebrew/bin/brew" ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [ -f "/usr/local/bin/brew" ]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        fi
+        
+        if check_command brew; then
+            print_success "Homebrew 安装完成"
+        else
+            print_error "Homebrew 安装失败，请手动安装: https://brew.sh"
+            return 1
+        fi
+    else
+        print_success "Homebrew 已安装"
+    fi
+    
+    # 检查并安装 Python3
+    if ! check_command python3; then
+        print_info "未检测到 Python3，正在安装..."
+        if brew install python3; then
+            print_success "Python3 安装完成"
+        else
+            print_error "Python3 安装失败，请手动安装: brew install python3"
+            return 1
+        fi
+    else
+        print_success "Python3 已安装"
+        # 显示 Python 版本
+        python3 --version
+    fi
+}
+
 # 步骤1: 安装 Squirrel (Rime for macOS)
 install_squirrel() {
-    print_section "步骤 1/6: 安装 Squirrel (Rime for macOS)"
+    print_section "步骤 1/10: 安装 Squirrel (Rime for macOS)"
     
     if check_command brew; then
         print_info "检测到 Homebrew，使用 brew 安装..."
@@ -294,28 +337,75 @@ install_ai_system() {
     
     # 获取脚本所在目录
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    RIME_AI_DIR="$SCRIPT_DIR/Rime"
+    # 使用 rime_config 目录（真实目录），而不是 Rime 符号链接
+    RIME_AI_DIR="$SCRIPT_DIR/rime_config"
     TARGET_RIME_DIR="$RIME_DIR"
     TARGET_LUA_DIR="$TARGET_RIME_DIR/lua"
     
-    # 检查 Python3
+    # 检查 Python3（应该已经在步骤 0 中安装）
     if ! command -v python3 &>/dev/null; then
         print_error "未检测到 python3，AI 功能需要 Python3"
-        print_info "请先安装 Python3: brew install python3"
+        print_info "请先运行安装脚本，会自动安装 Python3"
         return 1
     fi
     
-    print_info "检查 Python 依赖..."
-    # 检查并安装 requests
-    if ! python3 -c "import requests" 2>/dev/null; then
-        print_info "正在安装 requests..."
-        if pip3 install --user requests 2>/dev/null; then
-            print_success "requests 安装完成"
+    print_info "检查并安装 Python 依赖..."
+    
+    # 从 requirements.txt 读取依赖（如果存在）
+    REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
+    
+    # 优先尝试使用 requirements.txt 安装所有依赖
+    if [ -f "$REQUIREMENTS_FILE" ]; then
+        print_info "使用 requirements.txt 安装依赖..."
+        if pip3 install --user -r "$REQUIREMENTS_FILE" 2>/dev/null; then
+            print_success "从 requirements.txt 安装依赖完成"
         else
-            print_warning "requests 安装失败，请手动安装: pip3 install requests"
+            print_warning "从 requirements.txt 安装失败，尝试单独安装..."
+            # 如果批量安装失败，逐个安装
+            local packages=("requests" "pynput" "pypinyin")
+            for package in "${packages[@]}"; do
+                # 包名到导入名的映射
+                local import_name="$package"
+                if [ "$package" = "pynput" ]; then
+                    import_name="pynput"
+                fi
+                
+                if ! python3 -c "import ${import_name}" 2>/dev/null; then
+                    print_info "正在安装 ${package}..."
+                    if pip3 install --user "${package}" 2>/dev/null; then
+                        print_success "${package} 安装完成"
+                    else
+                        print_warning "${package} 安装失败，请手动安装: pip3 install ${package}"
+                    fi
+                else
+                    print_success "${package} 已安装"
+                fi
+            done
         fi
     else
-        print_success "requests 已安装"
+        # 如果没有 requirements.txt，逐个安装
+        local packages=("requests" "pynput" "pypinyin")
+        for package in "${packages[@]}"; do
+            local import_name="$package"
+            if ! python3 -c "import ${import_name}" 2>/dev/null; then
+                print_info "正在安装 ${package}..."
+                if pip3 install --user "${package}" 2>/dev/null; then
+                    print_success "${package} 安装完成"
+                else
+                    print_warning "${package} 安装失败，请手动安装: pip3 install ${package}"
+                fi
+            else
+                print_success "${package} 已安装"
+            fi
+        done
+    fi
+    
+    # 验证关键依赖
+    print_info "验证关键依赖..."
+    if python3 -c "import requests" 2>/dev/null; then
+        print_success "requests 可用（AI 功能必需）"
+    else
+        print_error "requests 不可用，AI 功能可能无法正常工作"
     fi
     
     # 创建目标目录
@@ -351,6 +441,22 @@ install_ai_system() {
             print_warning "$file 不存在，跳过"
         fi
     done
+    
+    # 复制 rime_ice.schema.yaml（如果存在）
+    if [ -f "$RIME_AI_DIR/rime_ice.schema.yaml" ]; then
+        print_info "复制 rime_ice.schema.yaml..."
+        cp "$RIME_AI_DIR/rime_ice.schema.yaml" "$TARGET_RIME_DIR/rime_ice.schema.yaml"
+        print_success "已复制 rime_ice.schema.yaml"
+    else
+        print_warning "rime_ice.schema.yaml 不存在，跳过（通常由 rime-ice 自动提供）"
+    fi
+    
+    # 复制 rime_ice.schema.yaml（如果存在）
+    if [ -f "$RIME_AI_DIR/rime_ice.schema.yaml" ]; then
+        print_info "复制 rime_ice.schema.yaml..."
+        cp "$RIME_AI_DIR/rime_ice.schema.yaml" "$TARGET_RIME_DIR/rime_ice.schema.yaml"
+        print_success "已复制 rime_ice.schema.yaml"
+    fi
     
     # 更新 rime_ice.custom.yaml 配置
     print_info "更新 rime_ice.custom.yaml 配置..."
@@ -579,6 +685,7 @@ main() {
     fi
     
     # 执行安装步骤
+    install_prerequisites
     install_squirrel
     install_plum
     install_rime_lua
