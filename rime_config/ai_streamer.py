@@ -196,8 +196,12 @@ def stream_openai_like(cmd, query):
                             content = delta.get('content', '')
                             if content:
                                 # 逐字符 yield，实现真正的流式输出
+                                # 将换行符（\n）替换为回车符（\r），避免在聊天窗口中触发"发送"
                                 for ch in content:
-                                    yield ch
+                                    if ch == '\n':
+                                        yield '\r'  # 使用回车符代替换行符
+                                    else:
+                                        yield ch
                     except json.JSONDecodeError:
                         continue
     except Exception as e:

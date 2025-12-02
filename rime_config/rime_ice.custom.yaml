@@ -4,7 +4,7 @@ patch:
     # 以词定字快捷键配置（select_character.lua 需要）
     select_first_character: "bracketleft"   # 左中括号 [ 选首字
     select_last_character: "bracketright"   # 右中括号 ] 选末字
-    bindings+:
+    bindings:
       - { when: has_menu, accept: comma, send: Page_Up }      # , 上一页候选词
       - { when: has_menu, accept: period, send: Page_Down }   # . 下一页候选词
 

@@ -2,7 +2,7 @@
 data/*.bin
 data/*.txt
 data/dicts/
-Rime/
+Rime/*
 
 # 词典文件（可以提交，但大文件建议使用Git LFS）
 # data/dicts/*.txt
@@ -55,3 +55,4 @@ ENV/
 .DS_Store
 Thumbs.db
 
+Rime
